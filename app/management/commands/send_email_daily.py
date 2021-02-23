@@ -6,9 +6,10 @@ import datetime
 
 from django.core.management.base import BaseCommand
 from django.db.models import Count
-from django.core.mail import send_mail
+# from django.core.mail import send_mail
 
 from app.models import View, User, Setting
+from app.tasks import send_email
 
 
 class Command(BaseCommand):
@@ -35,8 +36,4 @@ class Command(BaseCommand):
         for view in max_views:
             user = User.objects.get(photo=view['photo_id'])
             message = Setting.objects.get(name='daily_notification').value % (user.first_name, user.last_name)
-            send_mail('Your photo in TOP 3',
-                      message,
-                      'from@mail.ru',
-                      [user.email],
-                      fail_silently=False)
+            send_email.delay('Your photo in TOP 3', message, 'from@mail.ru', user.email)

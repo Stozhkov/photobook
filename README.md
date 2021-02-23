@@ -24,3 +24,14 @@ Get the photo:
 
 Update name photo:
 `http://127.0.0.1:8000/api/v1/photo/<photo id>/`
+
+##Celery
+Start worker:
+`celery -A photobook worker -l INFO`
+
+##Sending e-mail
+For sending email every day add to cron next task:
+`0 9 * * * python /path/to/wor/dir/manage.py send_email_daily`
+
+For sending email every month add to cron next task:
+`0 9 1 * * python /path/to/wor/dir/manage.py send_email_daily`
