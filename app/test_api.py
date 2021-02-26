@@ -194,16 +194,16 @@ class ApiTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK,
                          f'Wrong response status code "{response.status_code}". Should be "200""')
 
-        self.assertEqual('Test name', response_decode['name'], 'Wrong "name" field')
-        self.assertNotEqual(response_decode['original_file'],
+        self.assertEqual('Test name', response_decode[0]['name'], 'Wrong "name" field')
+        self.assertNotEqual(response_decode[0]['original_file'],
                             'no-image.png', 'Wrong "original_file" field')
 
-        self.assertNotEqual(response_decode['small_file'], 'no-image.png',
+        self.assertNotEqual(response_decode[0]['small_file'], 'no-image.png',
                             'Wrong "small_file" field')
 
-        self.assertNotEqual(response_decode['webp_file'], 'no-image.png',
+        self.assertNotEqual(response_decode[0]['webp_file'], 'no-image.png',
                             'Wrong "webp_file" field')
-        self.assertNotEqual(response_decode['view_counter'], 0, 'Wrong "webp_file" field')
+        self.assertNotEqual(response_decode[0]['view_counter'], 0, 'Wrong "webp_file" field')
 
     def test_change_photo_name(self):
 

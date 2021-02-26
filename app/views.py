@@ -4,14 +4,16 @@ View for "Photo book" project
 
 import logging
 
-from rest_framework.permissions import IsAuthenticated
+from django.db.models import F
+from rest_framework.permissions import IsAuthenticated,AllowAny
 from rest_framework.generics import CreateAPIView, RetrieveUpdateAPIView, ListAPIView
+from rest_framework.response import Response
 
-from app.models import Photo
+from app.models import Photo, View
 from .serializers import PhotoDetailSerializer, PhotoListSerializer, PhotoCreateSerializer
 
 
-class PhotoViewUpdate(RetrieveUpdateAPIView):
+class PhotoDetailView(RetrieveUpdateAPIView):
     """
     Class for update photo name and detail view
     """
@@ -19,8 +21,20 @@ class PhotoViewUpdate(RetrieveUpdateAPIView):
     serializer_class = PhotoDetailSerializer
     queryset = Photo.objects.all()
 
+    def get(self, request, *args, **kwargs):
+        # Increase counter
+        Photo.objects.filter(pk=kwargs['pk'], user=request.user.id).\
+            update(view_counter=F('view_counter') + 1)
+        # Write photo views in IsAuthenticatede
+        View.objects.create(photo=Photo.objects.get(pk=kwargs['pk']))
 
-class PhotoViewCreate(CreateAPIView):
+        queryset = Photo.objects.filter(id=kwargs['pk'], user=request.user.id)
+        serializer = PhotoDetailSerializer(queryset, many=True)
+
+        return Response(serializer.data)
+
+
+class PhotoCreateView(CreateAPIView):
     """
     Class for creating new photo
     """
@@ -28,7 +42,7 @@ class PhotoViewCreate(CreateAPIView):
     serializer_class = PhotoCreateSerializer
 
 
-class PhotoViewList(ListAPIView):
+class PhotoListView(ListAPIView):
     """
     Class for list view
     """
