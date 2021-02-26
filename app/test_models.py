@@ -249,16 +249,27 @@ class PhotoModelTest(TestCase):
         self.assertEqual(field_upload_to, 'original',
                          'Field "original_file" has wrong attribute "upload_to"')
 
-    def test_original_file_field_default(self):
+    def test_original_file_field_blank(self):
         """
-        Test "original_file" field. Check default
+        Test "original_file" field. Check blank
         :return:
         """
         obj_view = Photo.objects.get(id=1)
-        field_default = obj_view._meta.get_field('original_file').default
+        field_default = obj_view._meta.get_field('original_file').blank
 
-        self.assertEqual(field_default, 'no-image.png',
-                         'Field "original_file" has wrong default')
+        self.assertEqual(field_default, False,
+                         'Field "original_file" has wrong blank attribute')
+
+    def test_original_file_field_null(self):
+        """
+        Test "original_file" field. Check null
+        :return:
+        """
+        obj_view = Photo.objects.get(id=1)
+        field_default = obj_view._meta.get_field('original_file').null
+
+        self.assertEqual(field_default, False,
+                         'Field "original_file" has wrong null attribute')
 
     # Small_file field tests
     def test_small_file_field_label(self):

@@ -15,7 +15,6 @@ from django.core.mail import send_mail
 from photobook.celery import app
 
 
-@app.task
 def send_email(subject, message, from_email, to_email):
     """
     Task for sending e-mail
@@ -35,7 +34,6 @@ def send_email(subject, message, from_email, to_email):
         logging.warning("Error send e-mail. %s" % err)
 
 
-@app.task
 def make_small_file(photo_id):
     """
     Task for making small photo
@@ -96,3 +94,13 @@ def make_webp_file(photo_id):
 
     photo.webp_file = file_object
     photo.save()
+
+@app.task
+def make_files(photo_id):
+    """
+    Task for running "make_small_file" and "make_webp_file" one by one.
+    :param photo_id:
+    :return:
+    """
+    make_webp_file(photo_id)
+    make_small_file(photo_id)

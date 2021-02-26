@@ -5,7 +5,7 @@ Models for "Photo book" project.
 from django.db import models
 from django.contrib.auth.models import User
 
-from app.tasks import make_small_file, make_webp_file
+from app.tasks import make_files
 
 
 class Photo(models.Model):
@@ -13,7 +13,7 @@ class Photo(models.Model):
     This model for photo file.
     """
     name = models.CharField(max_length=150, blank=False)
-    original_file = models.ImageField(upload_to='original', default='no-image.png')
+    original_file = models.ImageField(upload_to='original', blank=False, null=False)
     small_file = models.ImageField(upload_to='small', default='no-image.png')
     webp_file = models.ImageField(upload_to='webp', default='no-image.png')
     date_upload = models.DateTimeField(auto_now_add=True)
@@ -30,8 +30,7 @@ class Photo(models.Model):
         super().save(*args, **kwargs)
 
         if self.small_file.name == 'no-image.png' and self.webp_file.name == 'no-image.png':
-            make_small_file.delay(self.id)
-            make_webp_file.delay(self.id)
+            make_files(self.id)
 
     def __str__(self):
         """

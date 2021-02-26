@@ -5,6 +5,7 @@ Tests for API
 import ast
 import io
 import random
+from time import sleep
 
 from PIL import Image
 
@@ -12,6 +13,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from app.models import View, User, Photo
+from photobook.celery import app
 
 
 def generate_photo_file(file_name):
@@ -110,6 +112,7 @@ class ApiTest(APITestCase):
     access_token = ''
 
     def setUp(self):
+        app.conf.update(CELERY_ALWAYS_EAGER=True)
         self.superuser = User.objects.create_superuser('dima', 'dima@gmail.com', 'dimapassword')
         self.client.login(username='dima', password='dimapassword')
         self.data = {'username': 'dima', 'password': 'dimapassword'}
@@ -133,7 +136,7 @@ class ApiTest(APITestCase):
         """
 
         self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.access_token)
-        response = self.client.get('/api/v1/list/')
+        response = self.client.get('/api/v1/photos/')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK,
                          f'Wrong response status code "{response.status_code}". Should be "200""')
@@ -155,12 +158,15 @@ class ApiTest(APITestCase):
 
         data = {
             'name': 'Test file 2',
-            'original_file': generate_photo_file(file_name)
+            'original_file': generate_photo_file(file_name),
+            'user': User.objects.get(username='dima').id
         }
 
-        response = self.client.post('/api/v1/photo/', data=data, format='multipart')
+        response = self.client.post('/api/v1/photos/photo/create/', data=data, format='multipart')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED,
                          f'Wrong response status code "{response.status_code}". Should be "201""')
+
+        sleep(3)
 
         photo = Photo.objects.get(name='Test file 2')
 
@@ -182,25 +188,22 @@ class ApiTest(APITestCase):
 
         self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.access_token)
 
-        response = self.client.get('/api/v1/photo/1/', format='json')
+        response = self.client.get('/api/v1/photos/photo/1/', format='json')
         response_decode = ast.literal_eval(response.content.decode("UTF-8"))
-
+        # logging.warning(response_decode)
         self.assertEqual(response.status_code, status.HTTP_200_OK,
                          f'Wrong response status code "{response.status_code}". Should be "200""')
 
-        self.assertEqual(len(response_decode), 1,
-                         f'Should be 1 photo in response. Now it "{len(response_decode)}"')
-
-        self.assertEqual('Test name', response_decode[0]['name'], 'Wrong "name" field')
-        self.assertNotEqual(response_decode[0]['original_file'],
+        self.assertEqual('Test name', response_decode['name'], 'Wrong "name" field')
+        self.assertNotEqual(response_decode['original_file'],
                             'no-image.png', 'Wrong "original_file" field')
 
-        self.assertNotEqual(response_decode[0]['small_file'], 'no-image.png',
+        self.assertNotEqual(response_decode['small_file'], 'no-image.png',
                             'Wrong "small_file" field')
 
-        self.assertNotEqual(response_decode[0]['webp_file'], 'no-image.png',
+        self.assertNotEqual(response_decode['webp_file'], 'no-image.png',
                             'Wrong "webp_file" field')
-        self.assertNotEqual(response_decode[0]['view_counter'], 0, 'Wrong "webp_file" field')
+        self.assertNotEqual(response_decode['view_counter'], 0, 'Wrong "webp_file" field')
 
     def test_change_photo_name(self):
 
@@ -218,7 +221,7 @@ class ApiTest(APITestCase):
             'name': new_photo_name
         }
 
-        response = self.client.put('/api/v1/photo/1/', data=data, format='json')
+        response = self.client.put('/api/v1/photos/photo/1/', data=data, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK,
                          f'Wrong response status code "{response.status_code}". Should be "200""')

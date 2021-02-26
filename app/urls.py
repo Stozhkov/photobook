@@ -3,11 +3,11 @@ Urls for application app
 """
 
 from django.urls import path
-from app.views import PhotoListView, PhotoView
+from app.views import PhotoViewCreate, PhotoViewList, PhotoViewUpdate
 
 
 urlpatterns = [
-    path('list/', PhotoListView.as_view(), name='all-photo'),
-    path('photo/<photo_id>/', PhotoView.as_view(), name='photo'),
-    path('photo/', PhotoView.as_view(), name='photo'),
+    path('photo/<int:pk>/', PhotoViewUpdate.as_view()),
+    path('photo/create/', PhotoViewCreate.as_view()),
+    path('', PhotoViewList.as_view())
 ]

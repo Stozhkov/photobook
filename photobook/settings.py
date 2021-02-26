@@ -186,7 +186,9 @@ if DEBUG:
     for logger in LOGGING['loggers']:
         LOGGING['loggers'][logger]['handlers'] = ['console']
 
+# Settings for photo
 MAX_FILE_SIZE = 5 * 1024 * 1024
+ALLOWED_FILE_TYPES = ['png', 'jpg', 'jpeg']
 
 EMAIL_USE_TLS = True
 EMAIL_HOST = 'smtp.gmail.com'

@@ -34,5 +34,6 @@ class Command(BaseCommand):
 
         for view in max_views:
             user = User.objects.get(photo=view['photo_id'])
-            message = Setting.objects.get(name='mounthly_notification').value % (user.first_name, user.last_name)
+            message = Setting.objects.get(name='mounthly_notification').value % (user.first_name,
+                                                                                 user.last_name)
             send_email.delay('Your photo in TOP 3', message, 'from@mail.ru', user.email)
