@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'djoser',
     'drf_yasg',
     'rest_framework_simplejwt',
+    'storages',
 ]
 
 MIDDLEWARE = [
@@ -147,7 +148,17 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+AWS_ACCESS_KEY_ID = 'AKIATUGD5FKRWDAZJ573'
+AWS_SECRET_ACCESS_KEY = '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'
+AWS_STORAGE_BUCKET_NAME = 'photo-book***'
+AWS_S3_CUSTOM_DOMAIN = '%s.s3.amazonaws.com' % AWS_STORAGE_BUCKET_NAME
+
+AWS_S3_OBJECT_PARAMETERS = {
+    'CacheControl': 'max-age=86400',
+}
+
+DEFAULT_FILE_STORAGE = 'photobook.storage_backends.MediaStorage'
 
 LOGGING = {
     'version': 1,

@@ -1,11 +1,14 @@
 """
 Models for "Photo book" project.
 """
+import logging
 
+from django.dispatch import receiver
+from django.db.models.signals import post_delete
 from django.db import models
 from django.contrib.auth.models import User
 
-from app.tasks import make_files
+from app.tasks import make_files, delete_file_from_s3
 
 
 class Photo(models.Model):
@@ -30,7 +33,7 @@ class Photo(models.Model):
         super().save(*args, **kwargs)
 
         if self.small_file.name == 'no-image.png' and self.webp_file.name == 'no-image.png':
-            make_files(self.id)
+            make_files.delay(self.id)
 
     def __str__(self):
         """
@@ -60,3 +63,18 @@ class Setting(models.Model):
 
     def __str__(self):
         return f'{self.name} - {self.value}'
+
+
+@receiver(post_delete, sender=Photo)
+def delete_file_hook(sender, instance, using, **kwargs):
+    """
+    Hook for deleting files from running tasks deleting files.
+    :param sender:
+    :param instance:
+    :param using:
+    :param kwargs:
+    :return:
+    """
+    delete_file_from_s3.delay(instance.original_file.name)
+    delete_file_from_s3.delay(instance.small_file.name)
+    delete_file_from_s3.delay(instance.webp_file.name)

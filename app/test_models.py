@@ -1,11 +1,13 @@
 """
 Test models
 """
+from time import sleep
 
 from django.db import models
 from django.test import TestCase
 
 from app.models import PhotoOpening, User, Photo, Setting
+from photobook.celery import app
 
 
 class ViewModelsTest(TestCase):
@@ -17,6 +19,8 @@ class ViewModelsTest(TestCase):
         User.objects.create(username='admin', password='12345')
         Photo.objects.create(name='Test photo name',
                              original_file='test.jpg',
+                             small_file='test.jpg',
+                             webp_file='test.jpg',
                              user=User.objects.get(pk=1))
         PhotoOpening.objects.create(photo=Photo.objects.get(pk=1))
 
@@ -169,11 +173,15 @@ class PhotoModelTest(TestCase):
     """
     @classmethod
     def setUpTestData(cls):
+        app.conf.update(CELERY_ALWAYS_EAGER=True)
         User.objects.create(username='admin', password='12345', email='si-nn@mail.ru')
         Photo.objects.create(name='Test photo name',
                              original_file='test.jpg',
                              user=User.objects.get(pk=1))
+        # logging.warning(type(Photo.objects.get(name='Test photo name').original_file.file))
         PhotoOpening.objects.create(photo=Photo.objects.get(pk=1))
+
+        sleep(5)
 
     # Name field tests
     def test_name_field_label(self):

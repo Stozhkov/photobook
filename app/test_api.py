@@ -3,44 +3,15 @@ Tests for API
 """
 
 import ast
-import io
-import random
+import logging
 from time import sleep
-
-from PIL import Image
 
 from rest_framework import status
 from rest_framework.test import APITestCase
 
 from app.models import PhotoOpening, User, Photo
 from photobook.celery import app
-
-
-def generate_photo_file(file_name):
-    """
-    Generate picture for test.
-    :param file_name:
-    :return Image object:
-    """
-    file = io.BytesIO()
-    image = Image.new('RGBA', size=(600, 400), color=(155, 0, 0))
-    image.save(file, 'png')
-    file.name = file_name
-    file.seek(0)
-    return file
-
-
-def generate_file_name() -> str:
-    """
-    Generate file name for test.
-    :return file name:
-    """
-    file_name = ''
-
-    for i in range(5):
-        file_name += random.choice("wertyupasdfghkzxcvbnm")
-
-    return file_name + '.png'
+from app.functions import generate_file_name, generate_photo_file
 
 
 class ApiAuthTest(APITestCase):
@@ -56,6 +27,8 @@ class ApiAuthTest(APITestCase):
 
         Photo.objects.create(name='Test name',
                              original_file='test.jpg',
+                             small_file='test.jpg',
+                             webp_file='test.jpg',
                              view_counter=1,
                              user=User.objects.get(pk=1))
 
@@ -119,6 +92,8 @@ class ApiTest(APITestCase):
 
         Photo.objects.create(name='Test name',
                              original_file='test.jpg',
+                             small_file='test.jpg',
+                             webp_file='test.jpg',
                              view_counter=1,
                              user=User.objects.get(pk=1))
 

@@ -6,11 +6,13 @@ import logging
 
 from io import BytesIO
 
+import boto3
 from PIL import Image
 from resizeimage import resizeimage
 
 from django.core.files import File
 from django.core.mail import send_mail
+from django.conf import settings
 
 from photobook.celery import app
 
@@ -104,3 +106,19 @@ def make_files(photo_id):
     """
     make_webp_file(photo_id)
     make_small_file(photo_id)
+
+
+@app.task(bind=True)
+def delete_file_from_s3(self, path):
+    try:
+        s3 = boto3.client(
+            "s3", aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY
+        )
+
+        s3.delete_object(Bucket=settings.AWS_STORAGE_BUCKET_NAME,
+                         Key='media/' + path)
+
+        return True
+    except Exception as exc:
+        raise self.retry(exc=exc, countdown=60)
