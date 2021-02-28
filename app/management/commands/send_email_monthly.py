@@ -7,7 +7,7 @@ from django.core.mail import send_mail
 from django.core.management.base import BaseCommand
 from django.db.models import Count
 
-from app.models import View, User, Setting
+from app.models import PhotoOpening, User, Setting
 from app.tasks import send_email
 
 
@@ -29,7 +29,7 @@ class Command(BaseCommand):
             datetime.datetime.now()
         ]
 
-        max_views = View.objects.filter(date_view__range=date_range).\
+        max_views = PhotoOpening.objects.filter(date_view__range=date_range).\
             values('photo_id').annotate(views=Count('photo_id')).order_by('-views')[:3]
 
         for view in max_views:

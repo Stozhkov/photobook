@@ -9,7 +9,7 @@ from rest_framework.permissions import IsAuthenticated,AllowAny
 from rest_framework.generics import CreateAPIView, RetrieveUpdateAPIView, ListAPIView
 from rest_framework.response import Response
 
-from app.models import Photo, View
+from app.models import Photo, PhotoOpening
 from .serializers import PhotoDetailSerializer, PhotoListSerializer, PhotoCreateSerializer
 
 
@@ -26,7 +26,7 @@ class PhotoDetailView(RetrieveUpdateAPIView):
         Photo.objects.filter(pk=kwargs['pk'], user=request.user.id).\
             update(view_counter=F('view_counter') + 1)
         # Write photo views in IsAuthenticatede
-        View.objects.create(photo=Photo.objects.get(pk=kwargs['pk']))
+        PhotoOpening.objects.create(photo=Photo.objects.get(pk=kwargs['pk']))
 
         queryset = Photo.objects.filter(id=kwargs['pk'], user=request.user.id)
         serializer = PhotoDetailSerializer(queryset, many=True)

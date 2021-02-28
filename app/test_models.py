@@ -5,7 +5,7 @@ Test models
 from django.db import models
 from django.test import TestCase
 
-from app.models import View, User, Photo, Setting
+from app.models import PhotoOpening, User, Photo, Setting
 
 
 class ViewModelsTest(TestCase):
@@ -18,14 +18,14 @@ class ViewModelsTest(TestCase):
         Photo.objects.create(name='Test photo name',
                              original_file='test.jpg',
                              user=User.objects.get(pk=1))
-        View.objects.create(photo=Photo.objects.get(pk=1))
+        PhotoOpening.objects.create(photo=Photo.objects.get(pk=1))
 
     def test_photo_field_type(self):
         """
         Test "photo" field. Check type
         :return:
         """
-        obj_view = View.objects.get(pk=1)
+        obj_view = PhotoOpening.objects.get(pk=1)
         field = obj_view._meta.get_field('photo')
 
         self.assertEqual(type(field), models.ForeignKey,
@@ -36,7 +36,7 @@ class ViewModelsTest(TestCase):
         Test "photo" field. Check relation
         :return:
         """
-        obj_view = View.objects.get(pk=1)
+        obj_view = PhotoOpening.objects.get(pk=1)
 
         self.assertEqual(type(obj_view.photo), Photo,
                          'Field related with wrong model')
@@ -46,7 +46,7 @@ class ViewModelsTest(TestCase):
         Test "photo" field. Check label
         :return:
         """
-        obj_view = View.objects.get(pk=1)
+        obj_view = PhotoOpening.objects.get(pk=1)
         field_label = obj_view._meta.get_field('photo').verbose_name
 
         self.assertEqual(field_label, 'photo',
@@ -57,7 +57,7 @@ class ViewModelsTest(TestCase):
         Test "date_view" field. Check "auto add now"
         :return:
         """
-        obj_view = View.objects.get(pk=1)
+        obj_view = PhotoOpening.objects.get(pk=1)
 
         self.assertTrue(obj_view._meta.get_field('date_view').auto_now_add,
                         'Field date_view has no attribute auto_now_add')
@@ -67,7 +67,7 @@ class ViewModelsTest(TestCase):
         Test "date_view" field. Check type
         :return:
         """
-        obj_view = View.objects.get(id=1)
+        obj_view = PhotoOpening.objects.get(id=1)
         field = obj_view._meta.get_field('date_view')
 
         self.assertTrue(isinstance(field, models.DateTimeField),
@@ -173,7 +173,7 @@ class PhotoModelTest(TestCase):
         Photo.objects.create(name='Test photo name',
                              original_file='test.jpg',
                              user=User.objects.get(pk=1))
-        View.objects.create(photo=Photo.objects.get(pk=1))
+        PhotoOpening.objects.create(photo=Photo.objects.get(pk=1))
 
     # Name field tests
     def test_name_field_label(self):

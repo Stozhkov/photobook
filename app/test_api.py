@@ -12,7 +12,7 @@ from PIL import Image
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from app.models import View, User, Photo
+from app.models import PhotoOpening, User, Photo
 from photobook.celery import app
 
 
@@ -59,7 +59,7 @@ class ApiAuthTest(APITestCase):
                              view_counter=1,
                              user=User.objects.get(pk=1))
 
-        View.objects.create(photo=Photo.objects.get(pk=1))
+        PhotoOpening.objects.create(photo=Photo.objects.get(pk=1))
 
     def test_register_user(self):
         """
@@ -122,7 +122,7 @@ class ApiTest(APITestCase):
                              view_counter=1,
                              user=User.objects.get(pk=1))
 
-        View.objects.create(photo=Photo.objects.get(pk=1))
+        PhotoOpening.objects.create(photo=Photo.objects.get(pk=1))
 
         response = self.client.post('/api/v1/auth/jwt/create', self.data, format='json')
         self.access_token = ast.literal_eval(response.content.decode("UTF-8"))['access']

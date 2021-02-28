@@ -40,7 +40,7 @@ class Photo(models.Model):
         return str(self.name)
 
 
-class View(models.Model):
+class PhotoOpening(models.Model):
     """
     This model for count views
     """
