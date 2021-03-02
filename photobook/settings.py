@@ -13,6 +13,16 @@ import os
 import datetime
 from pathlib import Path
 
+try:
+    from .local_settings import aws_access_key_id
+    from .local_settings import aws_secret_access_key
+    from .local_settings import aws_storage_bucket_name
+    from .local_settings import email_host_user
+    from .local_settings import email_host_password
+except Exception as exc:
+    print(exc)
+    exit()
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -149,9 +159,9 @@ STATIC_URL = '/static/'
 
 MEDIA_URL = '/media/'
 
-AWS_ACCESS_KEY_ID = 'AKIATUGD5FKRWDAZJ573'
-AWS_SECRET_ACCESS_KEY = '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'
-AWS_STORAGE_BUCKET_NAME = 'photo-book***'
+AWS_ACCESS_KEY_ID = aws_access_key_id
+AWS_SECRET_ACCESS_KEY = aws_secret_access_key
+AWS_STORAGE_BUCKET_NAME = aws_storage_bucket_name
 AWS_S3_CUSTOM_DOMAIN = '%s.s3.amazonaws.com' % AWS_STORAGE_BUCKET_NAME
 
 AWS_S3_OBJECT_PARAMETERS = {
@@ -203,8 +213,8 @@ ALLOWED_FILE_TYPES = ['png', 'jpg', 'jpeg']
 
 EMAIL_USE_TLS = True
 EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_HOST_USER = '******@gmail.com'
-EMAIL_HOST_PASSWORD = '******'
+EMAIL_HOST_USER = email_host_user
+EMAIL_HOST_PASSWORD = email_host_password
 EMAIL_PORT = 587
 
 
