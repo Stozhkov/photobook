@@ -22,6 +22,7 @@ class Photo(models.Model):
     date_upload = models.DateTimeField(auto_now_add=True)
     view_counter = models.PositiveIntegerField(default=0)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    is_public = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
         """

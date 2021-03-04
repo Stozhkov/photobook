@@ -23,18 +23,32 @@ class PhotoDetailView(RetrieveUpdateDestroyAPIView):
     queryset = Photo.objects.all()
 
     def get(self, request, *args, **kwargs):
-        # Increase counter
-        Photo.objects.filter(pk=kwargs['pk'], user=request.user.id).\
-            update(view_counter=F('view_counter') + 1)
-        # Write photo views in IsAuthenticatede
-        try:
-            PhotoOpening.objects.create(photo=Photo.objects.get(pk=kwargs['pk']))
-        except:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        queryset = Photo.objects.filter(id=kwargs['pk'], user=request.user.id)
+        photo = Photo.objects.get(pk=kwargs['pk'])
+
+        if photo.user.id != request.user.id:
+            if not photo.is_public:
+                return Response(status=status.HTTP_403_FORBIDDEN)
+            else:
+                Photo.objects.filter(pk=kwargs['pk']).update(view_counter=F('view_counter') + 1)
+
+                PhotoOpening.objects.create(photo=Photo.objects.get(pk=kwargs['pk']))
+
+                queryset = Photo.objects.filter(id=kwargs['pk'])
+        else:
+            queryset = Photo.objects.filter(id=kwargs['pk'], user=request.user.id)
+
         serializer = PhotoDetailSerializer(queryset, many=True)
 
         return Response(serializer.data)
+
+    def put(self, request, *args, **kwargs):
+        queryset = Photo.objects.filter(pk=kwargs['pk'],
+                                        user=request.user.id).update(name=request.data['name'])
+        if not queryset:
+            return Response(data='Error.', status=status.HTTP_400_BAD_REQUEST)
+        else:
+            serializer = PhotoDetailSerializer(queryset, many=True)
+            return Response(serializer.data)
 
 
 class PhotoCreateView(CreateAPIView):
@@ -44,6 +58,10 @@ class PhotoCreateView(CreateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = PhotoCreateSerializer
 
+    def post(self, request, *args, **kwargs):
+        request.data['user'] = request.user.id
+        return self.create(request, *args, **kwargs)
+
 
 class PhotoListView(ListAPIView):
     """
@@ -51,4 +69,27 @@ class PhotoListView(ListAPIView):
     """
     permission_classes = [IsAuthenticated]
     serializer_class = PhotoListSerializer
-    queryset = Photo.objects.all()
+
+    def get(self, request, *args, **kwargs):
+        queryset = Photo.objects.filter(user=request.user.id)
+
+        if not queryset:
+            return Response(data='No photo for view', status=status.HTTP_400_BAD_REQUEST)
+        else:
+            serializer = PhotoListSerializer(queryset, many=True)
+            return Response(serializer.data)
+
+
+class PublicPhotoListView(PhotoListView):
+    """
+    Class for public list view
+    """
+
+    def get(self, request, *args, **kwargs):
+        queryset = Photo.objects.filter(is_public=True)
+
+        if not queryset:
+            return Response(data='No photos for view', status=status.HTTP_400_BAD_REQUEST)
+        else:
+            serializer = PhotoListSerializer(queryset, many=True)
+            return Response(serializer.data)

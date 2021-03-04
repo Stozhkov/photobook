@@ -16,6 +16,9 @@ Get token:
 Get list photos:
 `http://127.0.0.1:8000/api/v1/photos/`
 
+Get list of public photos:
+`http://127.0.0.1:8000/api/v1/photos/public/`
+
 Upload photo:
 `http://127.0.0.1:8000/api/v1/photos/photo/create`
 
