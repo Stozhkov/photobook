@@ -4,14 +4,32 @@ View for "Photo book" project
 
 import logging
 
+from django.shortcuts import redirect
 from django.db.models import F
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.generics import CreateAPIView, ListAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.generics import CreateAPIView, ListAPIView, RetrieveUpdateDestroyAPIView, UpdateAPIView
 from rest_framework.response import Response
+
 
 from app.models import Photo, PhotoOpening
 from .serializers import PhotoDetailSerializer, PhotoListSerializer, PhotoCreateSerializer
+
+
+class PhotoChangePrivacy(UpdateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = PhotoDetailSerializer
+
+    def put(self, request, *args, **kwargs):
+        photo = Photo.objects.get(pk=kwargs['pk'])
+
+        if photo.user.id != request.user.id:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        else:
+            obj = Photo.objects.get(id=kwargs['pk'])
+            obj.is_public = not obj.is_public
+            obj.save()
+            return redirect('detail', pk=kwargs['pk'])
 
 
 class PhotoDetailView(RetrieveUpdateDestroyAPIView):
@@ -35,9 +53,9 @@ class PhotoDetailView(RetrieveUpdateDestroyAPIView):
 
                 queryset = Photo.objects.filter(id=kwargs['pk'])
         else:
-            queryset = Photo.objects.filter(id=kwargs['pk'], user=request.user.id)
+            queryset = Photo.objects.get(id=kwargs['pk'], user=request.user.id)
 
-        serializer = PhotoDetailSerializer(queryset, many=True)
+        serializer = PhotoDetailSerializer(queryset)
 
         return Response(serializer.data)
 
@@ -47,6 +65,7 @@ class PhotoDetailView(RetrieveUpdateDestroyAPIView):
         if not queryset:
             return Response(data='Error.', status=status.HTTP_400_BAD_REQUEST)
         else:
+            queryset = Photo.objects.filter(pk=kwargs['pk'], user=request.user.id)
             serializer = PhotoDetailSerializer(queryset, many=True)
             return Response(serializer.data)
 
@@ -84,6 +103,8 @@ class PublicPhotoListView(PhotoListView):
     """
     Class for public list view
     """
+    permission_classes = [IsAuthenticated]
+    serializer_class = PhotoListSerializer
 
     def get(self, request, *args, **kwargs):
         queryset = Photo.objects.filter(is_public=True)
@@ -93,3 +114,5 @@ class PublicPhotoListView(PhotoListView):
         else:
             serializer = PhotoListSerializer(queryset, many=True)
             return Response(serializer.data)
+
+

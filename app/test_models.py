@@ -457,3 +457,34 @@ class PhotoModelTest(TestCase):
         field_label = obj_view._meta.get_field('user').verbose_name
 
         self.assertEqual(field_label, 'user', 'Field "user" has wrong label')
+
+    def test_is_public_field_label(self):
+        """
+        Test "is_public" field. Check label.
+        :return:
+        """
+        photo = Photo.objects.get(pk=1)
+        field_label = photo._meta.get_field('is_public').verbose_name
+
+        self.assertEqual(field_label, 'is public', 'Field "is_public" has wrong label')
+
+    def test_is_public_field_type(self):
+        """
+        Test "is_public" field. Check type.
+        :return:
+        """
+        photo = Photo.objects.get(pk=1)
+        field = photo._meta.get_field('is_public')
+
+        self.assertTrue(isinstance(field, models.BooleanField),
+                        'Field "is_public" has wrong type')
+
+    def test_is_public_field_default(self):
+        """
+        Test "is_public" field. Check default attribute.
+        :return:
+        """
+        obj_view = Photo.objects.get(id=1)
+        field_default = obj_view._meta.get_field('is_public').default
+
+        self.assertEqual(field_default, False, 'Field "is_public" has wrong default')

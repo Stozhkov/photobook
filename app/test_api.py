@@ -3,6 +3,7 @@ Tests for API
 """
 
 import ast
+import json
 import logging
 from time import sleep
 
@@ -74,7 +75,7 @@ class ApiAuthTest(APITestCase):
         self.assertEqual(status_code, status.HTTP_200_OK,
                          f'Wrong response status code "{status_code}". Should be "200""')
 
-        self.assertTrue('access' in ast.literal_eval(response.content.decode("UTF-8")),
+        self.assertTrue('access' in json.loads(response.content.decode("UTF-8")),
                         f'No "access" token in response. {response.content}')
 
 
@@ -83,6 +84,9 @@ class ApiTest(APITestCase):
     Test API
     """
     access_token = ''
+
+    # def tearDownClass(cls):
+
 
     def setUp(self):
         app.conf.update(CELERY_ALWAYS_EAGER=True)
@@ -100,7 +104,7 @@ class ApiTest(APITestCase):
         PhotoOpening.objects.create(photo=Photo.objects.get(pk=1))
 
         response = self.client.post('/api/v1/auth/jwt/create', self.data, format='json')
-        self.access_token = ast.literal_eval(response.content.decode("UTF-8"))['access']
+        self.access_token = json.loads(response.content.decode("UTF-8"))['access']
 
     def test_getting_photo_list(self):
 
@@ -164,21 +168,20 @@ class ApiTest(APITestCase):
         self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.access_token)
 
         response = self.client.get('/api/v1/photos/photo/1/', format='json')
-        response_decode = ast.literal_eval(response.content.decode("UTF-8"))
-        # logging.warning(response_decode)
+        response_decode = json.loads(response.content.decode("UTF-8"))
         self.assertEqual(response.status_code, status.HTTP_200_OK,
                          f'Wrong response status code "{response.status_code}". Should be "200""')
 
-        self.assertEqual('Test name', response_decode[0]['name'], 'Wrong "name" field')
-        self.assertNotEqual(response_decode[0]['original_file'],
+        self.assertEqual('Test name', response_decode['name'], 'Wrong "name" field')
+        self.assertNotEqual(response_decode['original_file'],
                             'no-image.png', 'Wrong "original_file" field')
 
-        self.assertNotEqual(response_decode[0]['small_file'], 'no-image.png',
+        self.assertNotEqual(response_decode['small_file'], 'no-image.png',
                             'Wrong "small_file" field')
 
-        self.assertNotEqual(response_decode[0]['webp_file'], 'no-image.png',
+        self.assertNotEqual(response_decode['webp_file'], 'no-image.png',
                             'Wrong "webp_file" field')
-        self.assertNotEqual(response_decode[0]['view_counter'], 0, 'Wrong "webp_file" field')
+        self.assertNotEqual(response_decode['view_counter'], 0, 'Wrong "webp_file" field')
 
     def test_change_photo_name(self):
 
