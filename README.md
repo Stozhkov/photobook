@@ -31,6 +31,16 @@ Update name photo:
 Delete photo:
 `http://127.0.0.1:8000/api/v1/photos/photo/<photo id>/`
 
+Get the comment:
+`http://127.0.0.1:8000/api/v1/photos/comment/<comment id>/`
+
+Create comment:
+`http://127.0.0.1:8000/api/v1/photos/comment/create/`
+
+Get comment list for the photo:
+`http://127.0.0.1:8000/api/v1/photos/photo/<photo id>/comments/`
+
+
 ##Celery
 Start worker:
 `celery -A photobook worker -l INFO`

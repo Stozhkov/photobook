@@ -44,6 +44,19 @@ class Photo(models.Model):
         return str(self.name)
 
 
+class PhotoComment(models.Model):
+    """
+    This model for comments
+    """
+    text = models.TextField(max_length=2000, blank=False)
+    photo = models.ForeignKey(Photo, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    add_date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.text
+
+
 class PhotoOpening(models.Model):
     """
     This model for count views

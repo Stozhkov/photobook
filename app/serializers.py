@@ -4,7 +4,20 @@ Serializers for "Photo book" project
 
 from django.conf import settings
 from rest_framework import serializers
+from app.models import PhotoComment
 from app.models import Photo
+
+
+class CommentDetailSerializer(serializers.ModelSerializer):
+    """
+    Detail serializer for PhotoComment model
+    """
+    class Meta:
+        """
+        Meta class
+        """
+        model = PhotoComment
+        fields = '__all__'
 
 
 class PhotoListSerializer(serializers.ModelSerializer):

@@ -2,25 +2,41 @@
 View for "Photo book" project
 """
 
-import logging
+# import logging
 
 from django.shortcuts import redirect
 from django.db.models import F
 from rest_framework import status
+from rest_framework.generics import CreateAPIView
+from rest_framework.generics import ListAPIView
+from rest_framework.generics import RetrieveAPIView
+from rest_framework.generics import RetrieveUpdateDestroyAPIView
+from rest_framework.generics import UpdateAPIView
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.generics import CreateAPIView, ListAPIView, RetrieveUpdateDestroyAPIView, UpdateAPIView
 from rest_framework.response import Response
 
-
-from app.models import Photo, PhotoOpening
-from .serializers import PhotoDetailSerializer, PhotoListSerializer, PhotoCreateSerializer
+from app.models import Photo, PhotoOpening, PhotoComment
+from .serializers import CommentDetailSerializer
+from .serializers import PhotoCreateSerializer
+from .serializers import PhotoDetailSerializer
+from .serializers import PhotoListSerializer
 
 
 class PhotoChangePrivacy(UpdateAPIView):
+    """
+    View for changing photo privacy
+    """
     permission_classes = [IsAuthenticated]
     serializer_class = PhotoDetailSerializer
 
     def put(self, request, *args, **kwargs):
+        """
+        Put method
+        :param request:
+        :param args:
+        :param kwargs:
+        :return:
+        """
         photo = Photo.objects.get(pk=kwargs['pk'])
 
         if photo.user.id != request.user.id:
@@ -30,6 +46,65 @@ class PhotoChangePrivacy(UpdateAPIView):
             obj.is_public = not obj.is_public
             obj.save()
             return redirect('detail', pk=kwargs['pk'])
+
+
+class PhotoCommentListView(ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = CommentDetailSerializer
+
+    def get(self, request, *args, **kwargs):
+        try:
+            photo = Photo.objects.get(pk=kwargs['pk'])
+        except Photo.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        else:
+            if photo.is_public or photo.user.id == request.user.id:
+                comments = PhotoComment.objects.filter(photo=photo).order_by('-add_date')
+                serializer = CommentDetailSerializer(comments, many=True)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            else:
+                return Response(status=status.HTTP_403_FORBIDDEN)
+
+
+class CommentDetailView(RetrieveAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = CommentDetailSerializer
+
+    def get(self, request, *args, **kwargs):
+        try:
+            comment = PhotoComment.objects.get(pk=kwargs['pk'])
+        except PhotoComment.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        else:
+            photo = comment.photo
+
+            if photo.is_public or photo.user.id == request.user.id:
+                serializer = CommentDetailSerializer(comment)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            else:
+                return Response(status=status.HTTP_403_FORBIDDEN)
+
+
+class CommentCreateView(CreateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = CommentDetailSerializer
+
+    def post(self, request, *args, **kwargs):
+
+        try:
+            photo = Photo.objects.get(pk=request.data['photo'])
+        except Photo.DoesNotExist:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        if photo.is_public or photo.user.id == request.user.id:
+            # _mutable = request.data._mutable
+            # request.data._mutable = True
+            request.data['user'] = request.user.id
+            # request.data._mutable = _mutable
+
+            return self.create(request, *args, **kwargs)
+        else:
+            return Response(status=status.HTTP_403_FORBIDDEN)
 
 
 class PhotoDetailView(RetrieveUpdateDestroyAPIView):
@@ -51,13 +126,13 @@ class PhotoDetailView(RetrieveUpdateDestroyAPIView):
 
                 PhotoOpening.objects.create(photo=Photo.objects.get(pk=kwargs['pk']))
 
-                queryset = Photo.objects.filter(id=kwargs['pk'])
+                queryset = Photo.objects.get(id=kwargs['pk'])
         else:
             queryset = Photo.objects.get(id=kwargs['pk'], user=request.user.id)
 
         serializer = PhotoDetailSerializer(queryset)
 
-        return Response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def put(self, request, *args, **kwargs):
         queryset = Photo.objects.filter(pk=kwargs['pk'],
@@ -114,5 +189,3 @@ class PublicPhotoListView(PhotoListView):
         else:
             serializer = PhotoListSerializer(queryset, many=True)
             return Response(serializer.data)
-
-
