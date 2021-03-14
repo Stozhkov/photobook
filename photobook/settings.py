@@ -14,11 +14,15 @@ import datetime
 from pathlib import Path
 
 try:
+    from .local_settings import django_key
+    from .local_settings import django_debug
     from .local_settings import aws_access_key_id
     from .local_settings import aws_secret_access_key
     from .local_settings import aws_storage_bucket_name
     from .local_settings import email_host_user
     from .local_settings import email_host_password
+    from .local_settings import redis_host
+    from .local_settings import redis_port
 except Exception as exc:
     print(exc)
     exit()
@@ -31,12 +35,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'k62f&zvd-456^8g@kfb&l=9%#92&kpz!es+qzv@)jr-ejpgi%w'
+SECRET_KEY = django_key
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = django_debug
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1', '0.0.0.0', '*']
 
 
 # Application definition
@@ -144,7 +148,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Moscow'
 
 USE_I18N = True
 
@@ -182,12 +186,12 @@ LOGGING = {
     },
     'handlers': {
         'console': {
-            'level': 'WARNING',
+            'level': 'INFO',
             'class': 'logging.StreamHandler',
             'formatter': 'simple'
         },
         'file': {
-            'level': 'WARNING',
+            'level': 'INFO',
             'class': 'logging.FileHandler',
             'filename': 'file.log',
             'formatter': 'simple'
@@ -219,8 +223,8 @@ EMAIL_PORT = 587
 
 
 # REDIS related settings
-REDIS_HOST = 'localhost'
-REDIS_PORT = '6379'
+REDIS_HOST = redis_host
+REDIS_PORT = redis_port
 BROKER_URL = 'redis://' + REDIS_HOST + ':' + REDIS_PORT + '/0'
 BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': 3600}
 CELERY_RESULT_BACKEND = 'redis://' + REDIS_HOST + ':' + REDIS_PORT + '/0'

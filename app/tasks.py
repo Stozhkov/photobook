@@ -2,6 +2,7 @@
 Tasks for Celery
 """
 
+import datetime
 import logging
 
 from io import BytesIO
@@ -13,7 +14,10 @@ from resizeimage import resizeimage
 from django.core.files import File
 from django.core.mail import send_mail
 from django.conf import settings
+from django.db.models import Count
 
+# from .models import Setting
+# from .models import PhotoOpening, Setting, User
 from photobook.celery import app
 
 
@@ -97,6 +101,7 @@ def make_webp_file(photo_id):
     photo.webp_file = file_object
     photo.save()
 
+
 @app.task
 def make_files(photo_id):
     """
@@ -109,16 +114,60 @@ def make_files(photo_id):
 
 
 @app.task(bind=True)
-def delete_file_from_s3(self, path):
+def delete_file_from_s3(self, path: str) -> bool:
+    """
+    Function for deleting file from AWS S3 storage
+    :param self:
+    :param path:
+    :return:
+    """
     try:
-        s3 = boto3.client(
+        s3_client = boto3.client(
             "s3", aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
             aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY
         )
 
-        s3.delete_object(Bucket=settings.AWS_STORAGE_BUCKET_NAME,
-                         Key='media/' + path)
+        s3_client.delete_object(
+            Bucket=settings.AWS_STORAGE_BUCKET_NAME,
+            Key='media/' + path
+        )
 
         return True
     except Exception as exc:
         raise self.retry(exc=exc, countdown=60)
+
+
+@app.task
+def choice_top_3(period: str) -> None:
+    """
+    Choice winner TOP 3.
+    :param period: daily or monthly
+    :return:
+    """
+    from .models import PhotoOpening, Setting, User
+
+    if period == 'daily':
+        date_start = datetime.datetime.combine(datetime.date.today(),
+                                               datetime.datetime.min.time()) - datetime.timedelta(days=1)
+        date_stop = datetime.datetime.combine(datetime.date.today(), datetime.datetime.min.time())
+
+        date_range = [date_start, date_stop]
+        message_template = Setting.objects.get(name='daily_notification')
+    else:
+        date_stop = datetime.datetime.combine(datetime.date.today().replace(day=1), datetime.datetime.min.time())
+        date_start = date_stop - datetime.timedelta(days=1)
+
+        date_range = [
+            date_start.replace(day=1),
+            date_stop
+        ]
+        message_template = Setting.objects.get(name='mounthly_notification')
+
+    max_views = PhotoOpening.objects.filter(date_view__range=date_range).\
+                    values('photo_id').annotate(views=Count('photo_id')).order_by('-views')[:3]
+
+    for view in max_views:
+        user = User.objects.get(photo=view['photo_id'])
+
+        message = str(message_template) % (user.first_name, user.last_name)
+        send_email('Your photo in TOP 3', message, 'from@mail.ru', user.email)

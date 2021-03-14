@@ -49,9 +49,6 @@ Start worker:
 Start worker:
 `flower -A photobook --port=5555`
 
-##Sending e-mail
-For sending email every day add to cron next task:
-`0 9 * * * python /path/to/wor/dir/manage.py send_email_daily`
-
-For sending email every month add to cron next task:
-`0 9 1 * * python /path/to/wor/dir/manage.py send_email_daily`
+##Sending e-mail celery periodic tasks
+Daily TOP 3 sent in 09:00 everyday
+Monthly TOP 3 sent in 09:05 every first day in month
